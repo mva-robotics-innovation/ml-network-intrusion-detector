@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ML-NIDS Enterprise | Machine Learning Network Intrusion Detection</title>
+<meta name="description" content="ML-NIDS Enterprise: RandomForest network intrusion detection on the NSL-KDD schema, with live in-browser inference. By Ashish Kumar.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+<style>
+:root{--bg:#f6f8fb;--card:#fff;--tx:#0f172a;--mu:#5b6478;--bd:#e2e8f0;--ac:#2563eb;--ok:#16a34a;--bad:#dc2626;--wn:#d97706;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0b1220;--card:#121b2e;--tx:#e6ebf5;--mu:#93a0b8;--bd:#22304a;--ac:#5b9bff;--ok:#34d399;--bad:#f87171;--wn:#fbbf24;color-scheme:dark}}
+:root[data-theme=dark]{--bg:#0b1220;--card:#121b2e;--tx:#e6ebf5;--mu:#93a0b8;--bd:#22304a;--ac:#5b9bff;--ok:#34d399;--bad:#f87171;--wn:#fbbf24;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.w{max-width:1080px;margin:auto;padding:0 20px}
+nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--bd)}
+nav .w{display:flex;align-items:center;gap:18px;height:58px}nav b{margin-right:auto}
+nav a{color:var(--mu);text-decoration:none;font-size:14px}nav a:hover{color:var(--tx)}
+button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;padding:6px 12px}
+button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+header{padding:72px 0 40px}
+h1{font-size:clamp(32px,6vw,54px);line-height:1.1;margin:0 0 14px;letter-spacing:-.02em}
+h2{font-size:28px;margin:0 0 6px}h3{margin:0 0 10px;font-size:17px}
+.mu{color:var(--mu)}.tag{display:inline-block;font-size:12px;padding:3px 10px;border:1px solid var(--bd);border-radius:99px;color:var(--mu);margin:0 6px 8px 0}
+section{padding:44px 0}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px}
+.g{display:grid;gap:16px}.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.k{font-size:30px;font-weight:700}.k small{display:block;font-size:13px;font-weight:400;color:var(--mu)}
+.warn{border:1px solid var(--wn);color:var(--wn);border-radius:10px;padding:10px 14px;font-size:14px;margin:16px 0}
+.sl{display:grid;grid-template-columns:1fr auto;gap:2px 10px;margin-bottom:10px;font-size:14px}.sl input{grid-column:1/3;width:100%;accent-color:var(--ac)}
+select{width:100%;padding:6px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
+.res{border-radius:12px;padding:16px;font-weight:600;font-size:18px;border:1px solid}
+.res.ok{color:var(--ok);border-color:var(--ok)}.res.bad{color:var(--bad);border-color:var(--bad)}
+.bar{display:grid;grid-template-columns:64px 1fr 48px;gap:8px;align-items:center;font-size:13px;margin:5px 0}
+.bar i{display:block;height:9px;border-radius:5px;background:var(--ac)}.bar div{background:var(--bd);border-radius:5px}
+pre{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:12px;overflow:auto;font-size:12.5px;max-height:260px}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--bd)}th:first-child,td:first-child{text-align:left}
+.cm td{text-align:center;border:1px solid var(--bg)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+footer{border-top:1px solid var(--bd);padding:28px 0;color:var(--mu);font-size:14px}
+</style>
+</head>
+<body>
+<nav><div class="w"><b>🛡️ ML-NIDS</b><a href="#demo">Live demo</a><a href="#perf">Performance</a><a href="#arch">Architecture</a><a href="#about">About</a><button id="th" aria-label="Toggle theme">◐</button></div></nav>
+
+<header><div class="w">
+<span class="tag">IBM Cybersecurity Bootcamp 2026</span><span class="tag">NSL-KDD schema</span><span class="tag">RandomForest</span>
+<h1>Machine Learning<br>Network Intrusion Detection</h1>
+<p class="mu" style="max-width:640px;font-size:18px">Classifies network flows as Normal, DoS, Probe, R2L or U2R, with SIEM-ready JSON output, a REST API and an analyst dashboard. The demo below runs a real forest entirely in your browser.</p>
+<div class="row"><a href="#demo"><button class="p">Try live detection</button></a><a href="https://github.com/" id="gh" rel="noopener"><button>View source</button></a></div>
+</div></header>
+
+<div class="w" id="warn"></div>
+
+<section id="demo"><div class="w">
+<h2>Live traffic classifier</h2><p class="mu">Load a real held-out sample or adjust the flow features. Inference runs locally; no data leaves this page.</p>
+<div class="row" id="samples"></div>
+<div class="g g2">
+<div class="card"><h3>Flow features</h3><div id="sliders"></div><div class="g" style="grid-template-columns:repeat(3,1fr);gap:8px" id="cats"></div></div>
+<div class="card"><h3>Verdict</h3><div id="res" class="res ok">Loading model…</div><p id="truth" class="mu" style="font-size:14px"></p><div id="bars"></div>
+<h3 style="margin-top:14px">SIEM event <button id="cp" style="float:right;font-size:12px;padding:2px 8px">Copy</button></h3><pre id="siem"></pre></div>
+</div></div></section>
+
+<section id="perf"><div class="w">
+<h2>Measured performance</h2><p class="mu" id="pnote"></p>
+<div class="g g4" id="tiles"></div>
+<div class="g g2" style="margin-top:16px">
+<div class="card"><h3>Confusion matrix (row-normalised)</h3><div style="overflow-x:auto"><table class="cm" id="cm"></table></div></div>
+<div class="card"><h3>Top feature importances</h3><div id="imp"></div></div>
+</div>
+<div class="card" style="margin-top:16px;overflow-x:auto"><h3>Per-class metrics</h3><table id="pc"></table></div>
+</div></section>
+
+<section id="arch"><div class="w">
+<h2>Architecture</h2>
+<div class="g g4" style="margin-top:12px">
+<div class="card"><h3>1 · Data</h3><span class="mu">NSL-KDD parser (43 columns → 5 classes) with a labelled synthetic fallback.</span></div>
+<div class="card"><h3>2 · Pipeline</h3><span class="mu">One-hot encoding + RandomForest in a single scikit-learn pipeline.</span></div>
+<div class="card"><h3>3 · Serving</h3><span class="mu">FastAPI service with API-key auth, batch limits and SHA-256 model integrity check.</span></div>
+<div class="card"><h3>4 · SOC</h3><span class="mu">ECS-style JSON alerts for Wazuh, Splunk and Elastic; Streamlit analyst dashboard.</span></div>
+</div>
+<pre style="margin-top:16px">curl -X POST $HOST/predict -H "X-API-Key: $KEY" -H "Content-Type: application/json" \
+  -d '{"features": {"src_bytes": 500, "count": 10, "serror_rate": 0.0}}'</pre>
+<p class="mu"><b>Limitations:</b> NSL-KDD is a 2009-era benchmark; validate on your own labelled traffic before production use. Input is pre-computed flow features, not raw packets.</p>
+</div></section>
+
+<section id="about"><div class="w"><div class="card">
+<h2>About the developer</h2>
+<p style="margin:6px 0"><b>Ashish Kumar</b></p>
+<p class="mu" style="margin:0">Student-led startup of Jharkhand Rai University<br>Director &amp; Founder, MVA Robotics Innovation Org<br>IBM Cybersecurity Bootcamp 2026</p>
+</div></div></section>
+
+<footer><div class="w">ML-NIDS Enterprise v1.0 | Developer: Ashish Kumar | Student-led startup of Jharkhand Rai University | Director &amp; Founder, MVA Robotics Innovation Org | IBM Cybersecurity Bootcamp 2026</div></footer>
+
+<script>
+const $=s=>document.querySelector(s),pc=x=>(x*100).toFixed(1)+"%";
+const LIVE=[["duration",0,10000,1],["src_bytes",0,100000,10],["dst_bytes",0,100000,10],["count",0,500,1],["srv_count",0,500,1],["serror_rate",0,1,.01],["same_srv_rate",0,1,.01],["dst_host_count",0,255,1],["dst_host_same_srv_rate",0,1,.01],["dst_host_serror_rate",0,1,.01]];
+let M,base={},sel={};
+$("#th").onclick=()=>{const r=document.documentElement,d=r.dataset.theme||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");r.dataset.theme=d==="dark"?"light":"dark"};
+fetch("model.json").then(r=>r.json()).then(init).catch(()=>{$("#res").className="res bad";$("#res").textContent="Model failed to load."});
+
+function vec(){const v=M.numeric.map(n=>+base[n]||0);for(const c of M.cat_cols)for(const k of M.categories[c])v.push(sel[c]===k?1:0);return v}
+function predict(x){const p=Array(M.classes.length).fill(0);for(const t of M.trees){let n=0;while(t.l[n]!==-1)n=x[t.f[n]]<=t.t[n]?t.l[n]:t.r[n];t.v[n].forEach((q,i)=>p[i]+=q)}return p.map(q=>q/M.trees.length)}
+
+function load(s){M.numeric.forEach((n,i)=>base[n]=s.num[i]);Object.assign(sel,s.cat);syncUI();run(s.label)}
+function syncUI(){LIVE.forEach(([n])=>{$("#s_"+n).value=base[n];$("#v_"+n).textContent=base[n]});M.cat_cols.forEach(c=>$("#c_"+c).value=sel[c])}
+
+function run(truth){
+  const p=predict(vec()),i=p.indexOf(Math.max(...p)),label=M.classes[i],lv=M.threat[label],atk=label!=="Normal";
+  const r=$("#res");r.className="res "+(atk?"bad":"ok");
+  r.textContent=atk?`🚨 ${label} detected · ${pc(p[i])} · threat ${lv}`:`✅ Normal traffic · ${pc(p[i])}`;
+  $("#truth").textContent=truth?`Ground truth for this sample: ${truth} (${truth===label?"correct":"misclassified"})`:"";
+  $("#bars").innerHTML=M.classes.map((c,j)=>`<div class="bar"><span>${c}</span><div><i style="width:${p[j]*100}%"></i></div><span>${pc(p[j])}</span></div>`).join("");
+  const sev={None:0,Medium:50,High:75,Critical:100}[lv];
+  $("#siem").textContent=JSON.stringify({"@timestamp":new Date().toISOString(),event:{kind:atk?"alert":"event",category:["intrusion_detection"],severity:sev,module:"ml-nids"},nids:{label,confidence:+p[i].toFixed(4),threat_level:lv,probabilities:Object.fromEntries(M.classes.map((c,j)=>[c,+p[j].toFixed(4)])),trained_on_synthetic:M.synthetic},network:{protocol:sel.protocol_type,service:sel.service}},null,2);
+}
+
+function init(m){
+  M=m;M.numeric.forEach(n=>base[n]=0);Object.assign(base,{src_bytes:500,dst_bytes:1000,count:10,srv_count:10,same_srv_rate:1,dst_host_count:100,dst_host_srv_count:100,dst_host_same_srv_rate:1,logged_in:1});
+  M.cat_cols.forEach(c=>sel[c]=M.categories[c].includes({protocol_type:"tcp",service:"http",flag:"SF"}[c])?{protocol_type:"tcp",service:"http",flag:"SF"}[c]:M.categories[c][0]);
+  if(M.synthetic)$("#warn").innerHTML=`<div class="warn">⚠ This demo model is trained on <b>synthetic</b> data with the NSL-KDD schema. Figures are illustrative, not real-world detection results.</div>`;
+  $("#sliders").innerHTML=LIVE.map(([n,lo,hi,st])=>`<div class="sl"><label for="s_${n}">${n}</label><b id="v_${n}">${base[n]}</b><input type="range" id="s_${n}" min="${lo}" max="${hi}" step="${st}" value="${base[n]}"></div>`).join("");
+  LIVE.forEach(([n])=>$("#s_"+n).oninput=e=>{base[n]=+e.target.value;$("#v_"+n).textContent=base[n];run()});
+  $("#cats").innerHTML=M.cat_cols.map(c=>`<label class="mu" style="font-size:13px">${c}<select id="c_${c}">${M.categories[c].map(k=>`<option>${k}</option>`).join("")}</select></label>`).join("");
+  M.cat_cols.forEach(c=>{$("#c_"+c).value=sel[c];$("#c_"+c).onchange=e=>{sel[c]=e.target.value;run()}});
+  $("#samples").innerHTML=`<span class="mu" style="align-self:center">Load a real test flow:</span>`+M.classes.map(c=>`<button data-c="${c}">${c}</button>`).join("");
+  $("#samples").querySelectorAll("button").forEach(b=>b.onclick=()=>{const s=M.samples.filter(x=>x.label===b.dataset.c);load(s[Math.floor(Math.random()*s.length)])});
+  $("#cp").onclick=()=>navigator.clipboard&&navigator.clipboard.writeText($("#siem").textContent);
+  run();
+
+  const q=m.metrics;$("#pnote").textContent=`Hold-out evaluation on ${m.n_test.toLocaleString()} unseen flows (${m.trees.length}-tree forest, ${m.synthetic?"synthetic data":"NSL-KDD"}).`;
+  $("#tiles").innerHTML=[["Accuracy",q.accuracy],["Macro F1",q.f1_macro],["Attack detection rate",q.detection_rate],["False-alarm rate",q.false_alarm_rate]].map(([a,b])=>`<div class="card k">${pc(b)}<small>${a}</small></div>`).join("");
+  $("#cm").innerHTML=`<tr><th></th>${m.classes.map(c=>`<th style="text-align:center">${c}</th>`).join("")}</tr>`+m.confusion.map((r,i)=>{const s=r.reduce((a,b)=>a+b,0)||1;return`<tr><th>${m.classes[i]}</th>${r.map(v=>`<td style="background:color-mix(in srgb,var(--ac) ${Math.round(v/s*100)}%,transparent)">${pc(v/s)}</td>`).join("")}</tr>`}).join("");
+  const mx=Math.max(...Object.values(m.importance));
+  $("#imp").innerHTML=Object.entries(m.importance).map(([k,v])=>`<div class="bar" style="grid-template-columns:150px 1fr 48px"><span>${k}</span><div><i style="width:${v/mx*100}%"></i></div><span>${pc(v)}</span></div>`).join("");
+  $("#pc").innerHTML=`<tr><th>Class</th><th>Precision</th><th>Recall</th><th>F1</th><th>Support</th></tr>`+m.classes.map(c=>{const r=m.per_class[c];return`<tr><td>${c}</td><td>${r.precision.toFixed(3)}</td><td>${r.recall.toFixed(3)}</td><td>${r["f1-score"].toFixed(3)}</td><td>${r.support}</td></tr>`}).join("");
+}
+</script>
+</body>
+</html>

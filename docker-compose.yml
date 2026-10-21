@@ -1,0 +1,22 @@
+services:
+  train:                       # docker compose --profile train run --rm train
+    build: .
+    profiles: ["train"]
+    command: ["python", "ml_nids.py"]
+    volumes: ["./artifacts:/app/artifacts", "./data:/app/data"]
+
+  dashboard:
+    build: .
+    ports: ["8501:8501"]
+    volumes: ["./artifacts:/app/artifacts"]
+
+  api:
+    build: .
+    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      NIDS_API_KEY: ${NIDS_API_KEY:-}
+    ports: ["8000:8000"]
+    volumes: ["./artifacts:/app/artifacts"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health')"]
+      interval: 30s
